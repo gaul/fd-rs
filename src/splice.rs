@@ -24,6 +24,7 @@ mod raw {
     use std::os::unix::io::RawFd;
     use ::libc::{c_longlong, size_t, ssize_t, c_uint};
 
+    #[cfg(not(target_os = "macos"))]
     pub use ::libc::SPLICE_F_NONBLOCK;
 
     // From asm-generic/posix_types.h
@@ -43,6 +44,7 @@ enum SpliceMode {
 }
 
 // TODO: Replace most &RawFd with AsRawFd
+#[cfg(not(target_os = "macos"))]
 fn splice(fd_in: &RawFd, fd_out: &RawFd, len: size_t, mode: SpliceMode) -> io::Result<ssize_t> {
     let flags = match mode {
         SpliceMode::Block => 0,
@@ -65,6 +67,7 @@ static SPLICE_BUFFER_SIZE: size_t = 1024;
 ///
 /// You should ensure that there is no append flag to the `fd_out` file descriptor.
 /// You can use `unset_append_flag()` if needed and `set_flags()` to restore to the initial state.
+#[cfg(not(target_os = "macos"))]
 pub fn splice_loop(do_flush: Arc<AtomicBool>, flush_event: Option<Sender<()>>, fd_in: RawFd, fd_out: RawFd) {
     'select: loop {
         if do_flush.load(Relaxed) {
